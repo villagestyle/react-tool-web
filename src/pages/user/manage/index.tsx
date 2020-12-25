@@ -1,4 +1,4 @@
-import React, { useState, createRef, useEffect } from "react";
+import React, { useState, createRef, useEffect, useCallback } from "react";
 import ContentTitle from "src/components/content-title";
 import { Weaper, TableWeaper } from "./index.style";
 import AddComponent from "./_components/add";
@@ -16,9 +16,8 @@ import {
 import { useForm, FormInstance } from "antd/lib/form/Form";
 import userAPI from "src/api/user";
 import { TablePaginationConfig } from "antd/lib/table";
-import moment from "moment";
 import { StaffFile } from "src/types";
-import { InitPaginConfig } from 'src/utils';
+import { InitPaginConfig } from "src/utils";
 import OperationText from "src/components/operation-text";
 
 const UserManage = () => {
@@ -31,7 +30,9 @@ const UserManage = () => {
   const [curId, setCurId] = useState<string>(null);
   const formRef = createRef<FormInstance>();
 
-  const [pagination, setPagination] = useState<TablePaginationConfig>(InitPaginConfig);
+  const [pagination, setPagination] = useState<TablePaginationConfig>(
+    InitPaginConfig
+  );
 
   const columns: any = [
     {
@@ -61,24 +62,37 @@ const UserManage = () => {
         <Space size="middle">
           <OperationText onClick={() => remove(record.key)}>删除</OperationText>
           <OperationText onClick={() => edit(record.key)}>编辑</OperationText>
-          <OperationText onClick={() => resetPWD(record.key)}>重置密码</OperationText>
+          <OperationText onClick={() => resetPWD(record.key)}>
+            重置密码
+          </OperationText>
         </Space>
       )
     }
   ];
 
   const resetPWD = (id: string) => {
-    userAPI.resetPWD(id).then(ret => {
-      message.success(`密码已重置为888888`);
-    });
+    Modal.confirm({
+      title: '提示',
+      cancelText: '取消',
+      okText: '确认',
+      content: '确定重置密码？',
+      onOk: () => {
+        userAPI.resetPWD(id).then(ret => {
+          message.success(`密码已重置为${ret.data.newPassword}`);
+        });
+      }
+    })
   };
 
   const remove = (id: string) => {
     Modal.confirm({
-      title: "提示",
-      cancelText: '取消',
-      okText: '确认',
-      content: "确定删除该用户?",
+      title: "警告",
+      cancelText: "取消",
+      cancelButtonProps: { type: 'primary' },
+      okButtonProps: { danger: true },
+      okText: "确认",
+      content: "删除后数据将无法恢复, 确认删除？",
+      type: "error",
       onOk: () => {
         userAPI.remove(id).then(ret => {
           message.success("删除成功");
@@ -115,31 +129,38 @@ const UserManage = () => {
     });
   };
 
-  const loadData = (data: { pageNum: number; rows: number }) => {
-    const formData = form.getFieldsValue() as {
-      name: string;
-    };
-    setLoading(true);
-    userAPI.page({ ...data, ...formData }).then(ret => {
-      const arr = ret.data.records.map((d: any, index: number) => {
-        return {
-          key: d.id,
-          index: index + (pagination.current - 1) * pagination.pageSize + 1,
-          username: d.username,
-          role: d.role?.name,
-          name: d.staffFile?.name,
-          sex: ["女", "男"][d.staffFile?.sex],
-          cellphone: d.staffFile?.cellphone
-        };
-      });
-      setTableData(arr);
-      setPagination({
-        ...pagination,
-        total: ret.data.total,
-        current: ret.data.current
-      });
-    }).finally(() => setLoading(false));
-  };
+  const loadData = useCallback(
+    (data: { pageNum: number; rows: number }) => {
+      const formData = form.getFieldsValue() as {
+        name: string;
+      };
+      setLoading(true);
+      userAPI
+        .page({ ...data, ...formData })
+        .then(ret => {
+          const arr = ret.data.records.map((d: any, index: number) => {
+            return {
+              key: d.id,
+              index: index + (data.pageNum - 1) * data.rows + 1,
+              username: d.username,
+              role: d.role?.name,
+              name: d.name,
+              sex: ["女", "男"][d.sex],
+              cellphone: d.cellphone
+            };
+          });
+          setTableData(arr);
+          setPagination({
+            ...InitPaginConfig,
+            total: ret.data.total,
+            current: ret.data.current,
+            pageSize: data.rows
+          });
+        })
+        .finally(() => setLoading(false));
+    },
+    [form]
+  );
 
   const cancelHandle = () => {
     if (confirmLoading) {
@@ -162,14 +183,7 @@ const UserManage = () => {
         form
           .validateFields()
           .then(ret => {
-            let data = form.getFieldsValue();
-            data = {
-              ...data,
-              appointmentDay: moment(data.appointmentDay).format("YYYY-MM"),
-              birthday: moment(data.birthday).format("YYYY-MM-DD"),
-              workDay: moment(data.workDay).format("YYYY-MM"),
-              sectionName: data.sectionName || null
-            };
+            const data = form.getFieldsValue();
             setConfirmLoading(true);
             const req = curId
               ? userAPI.edit({ ...data } as StaffFile, curId)
@@ -199,7 +213,7 @@ const UserManage = () => {
 
   useEffect(() => {
     loadData({ pageNum: 1, rows: 6 });
-  }, []);
+  }, [loadData]);
 
   return (
     <div>
@@ -242,7 +256,6 @@ const UserManage = () => {
         title={`${curId ? "编辑" : "新增"}用户`}
         visible={visible}
         maskClosable={false}
-        width={850}
         onCancel={cancelHandle}
         destroyOnClose={true}
         footer={[
@@ -260,7 +273,7 @@ const UserManage = () => {
           </Button>
         ]}
       >
-       <AddComponent id={curId} ref={formRef}></AddComponent>
+        <AddComponent id={curId} ref={formRef}></AddComponent>
       </Modal>
     </div>
   );

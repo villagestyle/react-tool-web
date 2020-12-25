@@ -70,7 +70,7 @@ const Tabs = (prop: Prop) => {
         route => `/fund` + route.path === pathname
       )[0];
       dispatch(TabsActions.add({ ...data, active: true }));
-      setActiveKey(data.path);
+      setActiveKey(data?.path);
     }
   }, [router, dispatch, activeKey]);
 

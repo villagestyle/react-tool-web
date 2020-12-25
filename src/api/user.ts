@@ -41,19 +41,19 @@ export default {
       params: data
     }),
   /** 获取系统用户信息 */
-  info: (id: string | number) => axios.get(`user/staff/${id}`),
+  info: (id: string | number) => axios.get(`user/${id}`),
   /** 新增系统用户 */
   add: (data: StaffFile) =>
     axios({
       method: "post",
-      url: `user/staff`,
+      url: `user`,
       data
     }),
   /** 修改系统用户 */
   edit: (data: StaffFile, id: string | number) =>
     axios({
       method: "put",
-      url: `user/staff/${id}`,
+      url: `user/${id}`,
       data
     }),
   /** 删除用户 */
