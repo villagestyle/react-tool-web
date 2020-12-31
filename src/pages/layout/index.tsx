@@ -21,6 +21,7 @@ import userAPI from "src/api/user";
 
 const HomeComponent = lazy(() => import("../home"));
 const UserManageComponent = lazy(() => import("../user/manage"));
+const NoteManageComponent = lazy(() => import("../note/manage"));
 
 interface MenuResources extends Resource {
   children: Resource[];
@@ -103,6 +104,9 @@ const LayoutComponent = () => {
             <Menu.Item key="1" icon={<HomeOutlined />}>
               <Link to="/fund/m/user-manage">用户管理</Link>
             </Menu.Item>
+            <Menu.Item key="2" icon={<HomeOutlined />}>
+              <Link to="/fund/m/note-manage">备忘管理</Link>
+            </Menu.Item>
           </Menu>
         </Sider>
         <Layout className="site-layout">
@@ -143,8 +147,10 @@ const LayoutComponent = () => {
                 path="/fund/m/user-manage"
                 com={SuspenseComponent(UserManageComponent)}
               ></AliveRoute>
-              {/* <Route path="/fund/m/home" component={HomeComponent}></Route>
-              <Route path="/fund/m/user-manage" component={UserManageComponent}></Route> */}
+              <AliveRoute
+                path="/fund/m/note-manage"
+                com={SuspenseComponent(NoteManageComponent)}
+              ></AliveRoute>
               <Route path="/fund/m/error" component={Error}></Route>
               <Redirect to="/fund/m/error"></Redirect>
             </Switch>

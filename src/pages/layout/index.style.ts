@@ -21,7 +21,6 @@ export const Weaper = styled.div`
   .logo {
     height: 84px;
     text-align: center;
-    /* background: rgba(255, 255, 255, 0.2); */
     img {
       height: 100%;
     }
@@ -31,6 +30,11 @@ export const Weaper = styled.div`
   .logo-s {
     height: 18px;
     margin: 16px 0;
+  }
+
+  .site-layout {
+    height: 100%;
+    overflow: auto;
   }
 
   .site-layout .site-layout-background {
@@ -53,7 +57,6 @@ export const Weaper = styled.div`
 
   .sider {
     overflow-y: auto;
-    height: 100%;
   }
 `;
 

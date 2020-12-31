@@ -13,24 +13,6 @@ export default {
       params: { token },
       responseType: "blob"
     }),
-  /** 分页获取职工用户 */
-  staffPage: (data: StaffPageScreen) =>
-    axios({
-      method: "post",
-      url: `basic/user/staff/page`,
-      data
-    }),
-  /** 分页获取学生用户 */
-  studentPage: (data: StaffPageScreen) =>
-    axios({
-      method: "post",
-      url: "basic/user/student/page",
-      data
-    }),
-  /** 获取学生用户 */
-  studentInfo: (id: string) => axios.get(`basic/user/student/${id}`),
-  /** 获取学生用户 */
-  staffInfo: (id: string) => axios.get(`basic/user/staff/${id}`),
   /** 登出 */
   logout: () => axios.post(`user/logout`),
   /** 分页获取系统用户 */
@@ -60,17 +42,9 @@ export default {
   remove: (id: string) => axios.delete(`user/${id}`),
   /** 重置用户密码 */
   resetPWD: (id: string) => axios.put(`user/reset_password/${id}`),
-  /** 根据登录用户获取角色(包括权限信息) */
-  resource: () => axios.get(`role/login_user`),
   /** 修改密码 */
   changePWD: (data: { oldPassword: string; newPassword: string }) =>
-    postForm(`user/change_password`, data, "put"),
-  /** 获取职务列表 */
-  positionNameList: () => axios.get(`note_dict/list/position_name`),
-  /** 获取所属教研室列表 */
-  sectionNameList: () => axios.get(`note_dict/list/section_name`),
-  /** 获取角色列表 */
-  roleList: () => axios.get(`role/list`)
+    postForm(`user/change_password`, data, "put")
 };
 
 export interface PageScreen extends Screen {

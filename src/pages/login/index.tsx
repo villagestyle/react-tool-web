@@ -48,7 +48,6 @@ const Login = () => {
         <p className="title">tools</p>
         <Form
           name="basic"
-          initialValues={{ remember: true }}
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
           form={form}
