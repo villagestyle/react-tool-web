@@ -72,23 +72,23 @@ const UserManage = () => {
 
   const resetPWD = (id: string) => {
     Modal.confirm({
-      title: '提示',
-      cancelText: '取消',
-      okText: '确认',
-      content: '确定重置密码？',
+      title: "提示",
+      cancelText: "取消",
+      okText: "确认",
+      content: "确定重置密码？",
       onOk: () => {
         userAPI.resetPWD(id).then(ret => {
           message.success(`密码已重置为${ret.data.newPassword}`);
         });
       }
-    })
+    });
   };
 
   const remove = (id: string) => {
     Modal.confirm({
       title: "警告",
       cancelText: "取消",
-      cancelButtonProps: { type: 'primary' },
+      cancelButtonProps: { type: "primary" },
       okButtonProps: { danger: true },
       okText: "确认",
       content: "删除后数据将无法恢复, 确认删除？",
@@ -231,12 +231,14 @@ const UserManage = () => {
               </Item>
             </Col>
             <Col className="gutter-row opera-box" span={8}>
-              <Button type="primary" htmlType="submit">
-                查询
-              </Button>
-              <Button type="primary" htmlType="reset" onClick={reset}>
-                重置
-              </Button>
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  查询
+                </Button>
+                <Button type="primary" htmlType="reset" onClick={reset}>
+                  重置
+                </Button>
+              </Space>
             </Col>
           </Row>
         </Form>

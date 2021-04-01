@@ -4,7 +4,7 @@ export const Weaper = styled.div`
     display: flex;
     justify-content: space-between;
     margin: 20px 16px 0;
-    /deep/ div.ant-tabs-nav {
+    .ant-tabs-nav {
         margin-bottom: 0;
     }
     > button {
