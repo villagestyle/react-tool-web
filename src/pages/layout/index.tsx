@@ -18,6 +18,7 @@ import { Resource } from "src/types";
 import Avatar from "antd/lib/avatar/avatar";
 import { push } from "connected-react-router";
 import userAPI from "src/api/user";
+import { Config } from "src/utils";
 
 const HomeComponent = lazy(() => import("../home"));
 const UserManageComponent = lazy(() => import("../user/manage"));
@@ -77,7 +78,7 @@ const LayoutComponent = () => {
       okText: "确认",
       onOk: () => {
         userAPI.logout().then(() => {
-          dispatch(push(`/fund/login`));
+          dispatch(push(`/${Config.PACKAGE_NAME}/login`));
           message.success("退出成功");
         });
       }
@@ -99,13 +100,13 @@ const LayoutComponent = () => {
           </div>
           <Menu theme="dark" mode="inline" defaultSelectedKeys={["0"]}>
             <Menu.Item key="0" icon={<HomeOutlined />}>
-              <Link to="/fund/m/home">首页</Link>
+              <Link to={`/${Config.PACKAGE_NAME}/m/home`}>首页</Link>
             </Menu.Item>
             <Menu.Item key="1" icon={<HomeOutlined />}>
-              <Link to="/fund/m/user-manage">用户管理</Link>
+              <Link to={`/${Config.PACKAGE_NAME}/m/user-manage`}>用户管理</Link>
             </Menu.Item>
             <Menu.Item key="2" icon={<HomeOutlined />}>
-              <Link to="/fund/m/note-manage">备忘管理</Link>
+              <Link to={`/${Config.PACKAGE_NAME}/m/note-manage`}>备忘管理</Link>
             </Menu.Item>
           </Menu>
         </Sider>
@@ -140,19 +141,19 @@ const LayoutComponent = () => {
             </TabsWeaper>
             <Switch>
               <AliveRoute
-                path="/fund/m/home"
+                path={`/${Config.PACKAGE_NAME}/m/home`}
                 com={SuspenseComponent(HomeComponent)}
               ></AliveRoute>
               <AliveRoute
-                path="/fund/m/user-manage"
+                path={`/${Config.PACKAGE_NAME}/m/user-manage`}
                 com={SuspenseComponent(UserManageComponent)}
               ></AliveRoute>
               <AliveRoute
-                path="/fund/m/note-manage"
+                path={`/${Config.PACKAGE_NAME}/m/note-manage`}
                 com={SuspenseComponent(NoteManageComponent)}
               ></AliveRoute>
-              <Route path="/fund/m/error" component={Error}></Route>
-              <Redirect to="/fund/m/error"></Redirect>
+              <Route path={`/${Config.PACKAGE_NAME}/m/error`} component={Error}></Route>
+              <Redirect to={`/${Config.PACKAGE_NAME}/m/error`}></Redirect>
             </Switch>
           </Content>
         </Layout>
@@ -185,8 +186,8 @@ const AliveRoute = (prop: Prop) => {
   const { getCachingNodes, dropScope } = useAliveController();
 
   useEffect(() => {
-    setAlive(!!panes.filter(d => "/fund" + d.path === path)[0]);
-    const keys = panes.map(d => "/fund" + d.path);
+    setAlive(!!panes.filter(d => `/${Config.PACKAGE_NAME}` + d.path === path)[0]);
+    const keys = panes.map(d => `/${Config.PACKAGE_NAME}` + d.path);
     const alives = getCachingNodes();
     const delPro: Promise<any>[] = [];
     alives.forEach(d => {

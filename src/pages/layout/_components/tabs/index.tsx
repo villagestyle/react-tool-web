@@ -7,6 +7,7 @@ import { ApplicationState } from "src/store/index";
 import { Routers } from "src/utils/router";
 import * as TabsActions from "src/store/tabs/actions";
 import { push } from "connected-react-router";
+import { Config } from "src/utils";
 
 const { TabPane } = AntdTabs;
 
@@ -30,7 +31,7 @@ const Tabs = (prop: Prop) => {
 
   const onChange = (activeKey: string) => {
     setActiveKey(activeKey);
-    dispatch(push(`/fund` + activeKey));
+    dispatch(push(`/${Config.PACKAGE_NAME}` + activeKey));
     dispatch(TabsActions.toggle(activeKey));
   };
 
@@ -42,7 +43,7 @@ const Tabs = (prop: Prop) => {
 
   const clearTabs = () => {
     dispatch(TabsActions.clear());
-    dispatch(push(`/fund/m/home`));
+    dispatch(push(`/${Config.PACKAGE_NAME}/m/home`));
   };
 
   // 通行白名单
@@ -65,9 +66,9 @@ const Tabs = (prop: Prop) => {
       setActiveKey('/m/home');
       return;
     }
-    if (pathname !== `/fund` + activeKey) {
+    if (pathname !== `/${Config.PACKAGE_NAME}` + activeKey) {
       const data = Routers.filter(
-        route => `/fund` + route.path === pathname
+        route => `/${Config.PACKAGE_NAME}` + route.path === pathname
       )[0];
       dispatch(TabsActions.add({ ...data, active: true }));
       setActiveKey(data?.path);

@@ -12,6 +12,7 @@ export class Config {
   public static readonly API_KEY = "";
   public static readonly USE_MOCK = false;
   public static readonly DEBUG_MODE = false;
+  public static readonly PACKAGE_NAME = 'tool';
 }
 
 export const InitPaginConfig = {

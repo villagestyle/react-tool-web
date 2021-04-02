@@ -35,9 +35,9 @@ const Register = () => {
         token: validateToken.current,
         sysNo: Config.SYS_NO
       })
-      .then((ret) => {
+      .then(ret => {
         message.success("注册成功");
-        dispatch(push(`/fund/login`));
+        dispatch(push(`/${Config.PACKAGE_NAME}/login`));
       })
       .catch(() => {
         console.log("失败");
@@ -120,7 +120,7 @@ const Register = () => {
             </Button>
           </Form.Item>
           <Form.Item>
-            已有账号？<Link to="/fund/login">马上登录</Link>
+            已有账号？<Link to={`/${Config.PACKAGE_NAME}/login`}>马上登录</Link>
           </Form.Item>
         </Form>
       </div>

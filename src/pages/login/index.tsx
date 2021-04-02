@@ -31,7 +31,7 @@ const Login = () => {
       })
       .then(ret => {
         dispatch(userActions.toggle(ret.data));
-        dispatch(push(`/fund/m/home`));
+        dispatch(push(`/${Config.PACKAGE_NAME}/m/home`));
       })
       .catch(() => {
         console.log("失败");

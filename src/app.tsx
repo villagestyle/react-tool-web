@@ -18,13 +18,13 @@ const App = () => {
   return loadCompleted ? (
     <div className="App">
       <Switch>
-        <Route path="/fund/login" component={Login}></Route>
+        <Route path={`/${Config.PACKAGE_NAME}/login`} component={Login}></Route>
         {Config.DEBUG_MODE && (
-          <Route path="/fund/register" component={Register}></Route>
+          <Route path={`/${Config.PACKAGE_NAME}/register`} component={Register}></Route>
         )}
-        <Route path="/fund/m" component={Layout}></Route>
-        <Route path="/fund/error" component={Error}></Route>
-        <Redirect to="/fund/login"></Redirect>
+        <Route path={`/${Config.PACKAGE_NAME}/m`} component={Layout}></Route>
+        <Route path={`/${Config.PACKAGE_NAME}/error`} component={Error}></Route>
+        <Redirect to={`/${Config.PACKAGE_NAME}/login`}></Redirect>
       </Switch>
     </div>
   ) : (

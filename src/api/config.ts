@@ -4,10 +4,11 @@ import { message } from "antd";
 import { store } from "src/index";
 import * as userActoons from "src/store/user/actions";
 import { push } from "connected-react-router";
+import { Config } from "src/utils";
 
 const instance = axios.create({
-  // baseURL: "http://www.villagestyle.top:9001/tool"
-  baseURL: "http://localhost:9001/tool"
+  baseURL: "https://www.villagestyle.top:9000/interface"
+  // baseURL: "http://localhost:9001/tool"
 });
 
 instance.interceptors.request.use(
@@ -27,7 +28,7 @@ instance.interceptors.response.use(
     if (err.response && err.response.status === 401) {
       store.dispatch(userActoons.toggle());
       message.error("登录超时, 请重新登录");
-      store.dispatch(push("/fund"));
+      store.dispatch(push(`/${Config.PACKAGE_NAME}`));
     } else if (err.response && err.response?.data) {
       if (err.response?.data instanceof ArrayBuffer) {
         ab2str(err.response?.data, (result: string) => {
@@ -38,7 +39,7 @@ instance.interceptors.response.use(
       }
     } else {
       message.error("未知错误!");
-      store.dispatch(push("/fund/error"));
+      store.dispatch(push(`/${Config.PACKAGE_NAME}/error`));
     }
     return Promise.reject(err.response);
   }
