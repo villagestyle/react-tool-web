@@ -14,14 +14,14 @@ import {
   Input
 } from "antd";
 import { useForm, FormInstance } from "antd/lib/form/Form";
-import userAPI from "src/api/user";
+import resourceAPI from "src/api/resource";
 import { TablePaginationConfig } from "antd/lib/table";
-import { StaffFile } from "src/types";
-import { InitPaginConfig } from "src/utils";
+import moment from "moment";
 import OperationText from "src/components/operation-text";
+import { InitPaginConfig } from "src/utils";
 import RBACComponent from "src/components/rbac";
 
-const UserManage = () => {
+const ResourceManage = () => {
   const { Item } = Form;
   const [form] = useForm();
   const [loading, setLoading] = useState<boolean>(false);
@@ -31,9 +31,13 @@ const UserManage = () => {
   const [curId, setCurId] = useState<string>(null);
   const formRef = createRef<FormInstance>();
 
-  const [pagination, setPagination] = useState<TablePaginationConfig>(
-    InitPaginConfig
-  );
+  const [pagination, setPagination] = useState<TablePaginationConfig>({
+    current: 1,
+    total: 0,
+    showSizeChanger: true,
+    pageSize: 6,
+    pageSizeOptions: ["6", "10", "20", "30", "40", "50"]
+  });
 
   const columns: any = [
     {
@@ -44,16 +48,29 @@ const UserManage = () => {
       fixed: "left"
     },
     {
-      title: "账号",
-      width: 100,
-      dataIndex: "username",
-      key: "username",
+      title: "资源名称",
+      width: 250,
+      dataIndex: "name",
+      key: "name",
       fixed: "left"
     },
-    { title: "角色", dataIndex: "role", key: "role" },
-    { title: "姓名", dataIndex: "name", key: "name" },
-    { title: "联系手机", dataIndex: "cellphone", key: "cellphone" },
-    { title: "性别", dataIndex: "sex", key: "sex" },
+    { title: "权限字符串", dataIndex: "permission", key: "permission" },
+    { title: "图标", dataIndex: "icon", key: "icon" },
+    {
+      title: "路由路径",
+      dataIndex: "routerLink",
+      key: "routerLink"
+    },
+    {
+      title: "资源类型",
+      dataIndex: "type",
+      key: "type"
+    },
+    {
+      title: "创建时间",
+      dataIndex: "creTime",
+      key: "creTime"
+    },
     {
       title: "操作",
       key: "operation",
@@ -61,58 +78,18 @@ const UserManage = () => {
       width: 200,
       render: (val: any, record: any) => (
         <Space size="middle">
-          <RBACComponent permission="user-manage:delete">
-            <OperationText onClick={() => remove(record.key)}>
-              删除
-            </OperationText>
-          </RBACComponent>
-          <RBACComponent permission="user-manage:edit">
+          <RBACComponent permission="resources-manage:edit">
             <OperationText onClick={() => edit(record.key)}>编辑</OperationText>
           </RBACComponent>
-          <RBACComponent permission="user-manage:reset_pwd">
-            <OperationText onClick={() => resetPWD(record.key)}>
-              重置密码
+          <RBACComponent permission="resources-manage:delete">
+            <OperationText onClick={() => remove(record.key)}>
+              删除
             </OperationText>
           </RBACComponent>
         </Space>
       )
     }
   ];
-
-  const resetPWD = (id: string) => {
-    Modal.confirm({
-      title: "提示",
-      cancelText: "取消",
-      okText: "确认",
-      content: "确定重置密码？",
-      onOk: () => {
-        userAPI.resetPWD(id).then(ret => {
-          message.success(`密码已重置为${ret.data.newPassword}`);
-        });
-      }
-    });
-  };
-
-  const remove = (id: string) => {
-    Modal.confirm({
-      title: "警告",
-      cancelText: "取消",
-      cancelButtonProps: { type: "primary" },
-      okButtonProps: { danger: true },
-      okText: "确认",
-      content: "删除后数据将无法恢复, 确认删除？",
-      type: "error",
-      onOk: () => {
-        userAPI.remove(id).then(ret => {
-          message.success("删除成功");
-          loadData({
-            pageNum: pagination.current,
-            rows: pagination.pageSize
-          });
-        });
-      }
-    });
-  };
 
   const tableChange = (pageConfig: TablePaginationConfig) => {
     pagination.pageSize = pageConfig.pageSize;
@@ -123,7 +100,24 @@ const UserManage = () => {
     });
   };
 
-  const search = (values: any) => {
+  const remove = (id: string) => {
+    Modal.error({
+      title: "警告",
+      content: "确定删除该资源?",
+      okText: "确定",
+      onOk: () => {
+        resourceAPI.remove(id).then(ret => {
+          message.success("删除成功");
+          loadData({
+            pageNum: pagination.current,
+            rows: pagination.pageSize
+          });
+        });
+      }
+    });
+  };
+
+  const search = async (values: any) => {
     loadData({
       rows: pagination.pageSize,
       pageNum: 1
@@ -140,33 +134,38 @@ const UserManage = () => {
 
   const loadData = useCallback(
     (data: { pageNum: number; rows: number }) => {
+      setLoading(true);
       const formData = form.getFieldsValue() as {
         name: string;
+        permission: string;
       };
-      setLoading(true);
-      userAPI
+      // 获取数据
+      resourceAPI
         .page({ ...data, ...formData })
         .then(ret => {
           const arr = ret.data.records.map((d: any, index: number) => {
             return {
               key: d.id,
+              creTime: moment(d.creTime).format("YYYY-MM-DD HH:mm"),
               index: index + (data.pageNum - 1) * data.rows + 1,
-              username: d.username,
-              role: d.role?.name,
               name: d.name,
-              sex: ["女", "男"][d.sex],
-              cellphone: d.cellphone
+              permission: d.permission,
+              routerLink: d.routerLink,
+              type: ["菜单", "按钮"][d.type],
+              icon: d.icon
             };
           });
           setTableData(arr);
           setPagination({
             ...InitPaginConfig,
-            total: ret.data.total,
-            current: ret.data.current,
-            pageSize: data.rows
+            pageSize: data.rows,
+            current: data.pageNum,
+            total: ret.data.total
           });
         })
-        .finally(() => setLoading(false));
+        .finally(() => {
+          setLoading(false);
+        });
     },
     [form]
   );
@@ -175,7 +174,10 @@ const UserManage = () => {
     if (confirmLoading) {
       return;
     }
-    setCurId(null);
+    formRef.current.resetFields();
+    formRef.current.setFieldsValue({
+      record: [{}]
+    });
     setVisible(false);
   };
 
@@ -194,8 +196,8 @@ const UserManage = () => {
             const data = form.getFieldsValue();
             setConfirmLoading(true);
             const req = curId
-              ? userAPI.edit({ ...data } as StaffFile, curId)
-              : userAPI.add(data as StaffFile);
+              ? resourceAPI.edit(curId, { ...data })
+              : resourceAPI.add(data);
             req
               .then(ret => {
                 message.success(`提交成功`);
@@ -208,6 +210,7 @@ const UserManage = () => {
               })
               .catch(err => {
                 setConfirmLoading(false);
+                console.log("err", err);
               });
           })
           .catch(err => {
@@ -225,10 +228,10 @@ const UserManage = () => {
 
   return (
     <div>
-      <ContentTitle title="用户管理">
-        <RBACComponent permission="user-manage:add">
+      <ContentTitle title="资源管理">
+        <RBACComponent permission="resources-manage:add">
           <Button type="primary" onClick={() => edit()}>
-            新增用户
+            新增资源
           </Button>
         </RBACComponent>
       </ContentTitle>
@@ -236,8 +239,13 @@ const UserManage = () => {
         <Form onFinish={search} form={form}>
           <Row gutter={16}>
             <Col className="gutter-row" span={8}>
-              <Item label="姓名" name="name" className="search-box">
-                <Input allowClear placeholder="请输入" maxLength={30}></Input>
+              <Item label="资源名称" name="name" className="search-box">
+                <Input placeholder="请输入" maxLength={50}></Input>
+              </Item>
+            </Col>
+            <Col className="gutter-row" span={8}>
+              <Item label="权限名称" name="permission" className="search-box">
+                <Input placeholder="请输入" maxLength={50}></Input>
               </Item>
             </Col>
             <Col className="gutter-row opera-box" span={8}>
@@ -255,6 +263,7 @@ const UserManage = () => {
       </Weaper>
       <TableWeaper className="radius-box">
         <Table
+          scroll={{ x: 1600 }}
           columns={columns}
           dataSource={tableData}
           loading={loading}
@@ -265,9 +274,10 @@ const UserManage = () => {
 
       <Modal
         confirmLoading={confirmLoading}
-        title={`${curId ? "编辑" : "新增"}用户`}
+        title={`${curId ? "编辑" : "新增"}资源`}
         visible={visible}
         maskClosable={false}
+        width={850}
         onCancel={cancelHandle}
         destroyOnClose={true}
         footer={[
@@ -285,10 +295,10 @@ const UserManage = () => {
           </Button>
         ]}
       >
-        <AddComponent id={curId} ref={formRef}></AddComponent>
+        {visible && <AddComponent id={curId} ref={formRef}></AddComponent>}
       </Modal>
     </div>
   );
 };
 
-export default UserManage;
+export default ResourceManage;

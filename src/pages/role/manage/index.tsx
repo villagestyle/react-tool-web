@@ -14,14 +14,13 @@ import {
   Input
 } from "antd";
 import { useForm, FormInstance } from "antd/lib/form/Form";
-import userAPI from "src/api/user";
 import { TablePaginationConfig } from "antd/lib/table";
-import { StaffFile } from "src/types";
-import { InitPaginConfig } from "src/utils";
 import OperationText from "src/components/operation-text";
+import roleAPI from "src/api/role";
+import { InitPaginConfig } from "src/utils";
 import RBACComponent from "src/components/rbac";
 
-const UserManage = () => {
+const RoleManage = () => {
   const { Item } = Form;
   const [form] = useForm();
   const [loading, setLoading] = useState<boolean>(false);
@@ -31,9 +30,13 @@ const UserManage = () => {
   const [curId, setCurId] = useState<string>(null);
   const formRef = createRef<FormInstance>();
 
-  const [pagination, setPagination] = useState<TablePaginationConfig>(
-    InitPaginConfig
-  );
+  const [pagination, setPagination] = useState<TablePaginationConfig>({
+    current: 1,
+    total: 0,
+    showSizeChanger: true,
+    pageSize: 6,
+    pageSizeOptions: ["6", "10", "20", "30", "40", "50"]
+  });
 
   const columns: any = [
     {
@@ -44,16 +47,17 @@ const UserManage = () => {
       fixed: "left"
     },
     {
-      title: "账号",
+      title: "名称",
       width: 100,
-      dataIndex: "username",
-      key: "username",
+      dataIndex: "name",
+      key: "name",
       fixed: "left"
     },
-    { title: "角色", dataIndex: "role", key: "role" },
-    { title: "姓名", dataIndex: "name", key: "name" },
-    { title: "联系手机", dataIndex: "cellphone", key: "cellphone" },
-    { title: "性别", dataIndex: "sex", key: "sex" },
+    {
+      title: "操作人姓名",
+      dataIndex: "operName",
+      key: "operName"
+    },
     {
       title: "操作",
       key: "operation",
@@ -61,58 +65,18 @@ const UserManage = () => {
       width: 200,
       render: (val: any, record: any) => (
         <Space size="middle">
-          <RBACComponent permission="user-manage:delete">
-            <OperationText onClick={() => remove(record.key)}>
-              删除
-            </OperationText>
-          </RBACComponent>
-          <RBACComponent permission="user-manage:edit">
+          <RBACComponent permission="role-manage:edit">
             <OperationText onClick={() => edit(record.key)}>编辑</OperationText>
           </RBACComponent>
-          <RBACComponent permission="user-manage:reset_pwd">
-            <OperationText onClick={() => resetPWD(record.key)}>
-              重置密码
+          <RBACComponent permission="role-manage:delete">
+            <OperationText onClick={() => remove(record.key)}>
+              删除
             </OperationText>
           </RBACComponent>
         </Space>
       )
     }
   ];
-
-  const resetPWD = (id: string) => {
-    Modal.confirm({
-      title: "提示",
-      cancelText: "取消",
-      okText: "确认",
-      content: "确定重置密码？",
-      onOk: () => {
-        userAPI.resetPWD(id).then(ret => {
-          message.success(`密码已重置为${ret.data.newPassword}`);
-        });
-      }
-    });
-  };
-
-  const remove = (id: string) => {
-    Modal.confirm({
-      title: "警告",
-      cancelText: "取消",
-      cancelButtonProps: { type: "primary" },
-      okButtonProps: { danger: true },
-      okText: "确认",
-      content: "删除后数据将无法恢复, 确认删除？",
-      type: "error",
-      onOk: () => {
-        userAPI.remove(id).then(ret => {
-          message.success("删除成功");
-          loadData({
-            pageNum: pagination.current,
-            rows: pagination.pageSize
-          });
-        });
-      }
-    });
-  };
 
   const tableChange = (pageConfig: TablePaginationConfig) => {
     pagination.pageSize = pageConfig.pageSize;
@@ -126,7 +90,7 @@ const UserManage = () => {
   const search = (values: any) => {
     loadData({
       rows: pagination.pageSize,
-      pageNum: 1
+      pageNum: pagination.current
     });
   };
 
@@ -144,29 +108,25 @@ const UserManage = () => {
         name: string;
       };
       setLoading(true);
-      userAPI
-        .page({ ...data, ...formData })
-        .then(ret => {
-          const arr = ret.data.records.map((d: any, index: number) => {
-            return {
-              key: d.id,
-              index: index + (data.pageNum - 1) * data.rows + 1,
-              username: d.username,
-              role: d.role?.name,
-              name: d.name,
-              sex: ["女", "男"][d.sex],
-              cellphone: d.cellphone
-            };
-          });
-          setTableData(arr);
-          setPagination({
-            ...InitPaginConfig,
-            total: ret.data.total,
-            current: ret.data.current,
-            pageSize: data.rows
-          });
-        })
-        .finally(() => setLoading(false));
+      // 获取数据
+      roleAPI.page({ ...data, ...formData }).then(ret => {
+        const arr = ret.data.records.map((d: any, index: number) => {
+          return {
+            key: d.id,
+            index: index + data.pageNum * data.rows + 1,
+            name: d.name,
+            operName: d.operName
+          };
+        });
+        setTableData(arr);
+        setPagination({
+          ...InitPaginConfig,
+          pageSize: data.rows,
+          current: data.pageNum,
+          total: ret.data.total
+        });
+        setLoading(false);
+      });
     },
     [form]
   );
@@ -179,7 +139,25 @@ const UserManage = () => {
     setVisible(false);
   };
 
-  const edit = (id?: string) => {
+  const remove = (id: string) => {
+    Modal.error({
+      title: "警告",
+      content: "确定删除该角色?",
+      okText: "确定",
+      onOk: close => {
+        roleAPI.remove(id).then(ret => {
+          close();
+          message.success("删除成功");
+          loadData({
+            pageNum: pagination.current,
+            rows: pagination.pageSize
+          });
+        });
+      }
+    });
+  };
+
+  const edit = (id: string) => {
     setVisible(true);
     setCurId(id);
   };
@@ -192,31 +170,49 @@ const UserManage = () => {
           .validateFields()
           .then(ret => {
             const data = form.getFieldsValue();
-            setConfirmLoading(true);
-            const req = curId
-              ? userAPI.edit({ ...data } as StaffFile, curId)
-              : userAPI.add(data as StaffFile);
-            req
-              .then(ret => {
-                message.success(`提交成功`);
-                setVisible(false);
-                setConfirmLoading(false);
-                loadData({
-                  pageNum: pagination.current,
-                  rows: pagination.pageSize
+            if (!curId) {
+              roleAPI
+                .add({ ...data })
+                .then(() => {
+                  message.success(`提交成功`);
+                  setVisible(false);
+                  setConfirmLoading(false);
+                  loadData({
+                    pageNum: pagination.current,
+                    rows: pagination.pageSize
+                  });
+                })
+                .catch(() => {
+                  setConfirmLoading(false);
                 });
-              })
-              .catch(err => {
-                setConfirmLoading(false);
-              });
+            } else {
+              setConfirmLoading(true);
+              const req = roleAPI.edit(curId, { ...data });
+              req
+                .then(ret => {
+                  message.success(`提交成功`);
+                  setVisible(false);
+                  setConfirmLoading(false);
+                  loadData({
+                    pageNum: pagination.current,
+                    rows: pagination.pageSize
+                  });
+                })
+                .catch(() => {
+                  setConfirmLoading(false);
+                });
+            }
           })
           .catch(err => {
             setConfirmLoading(false);
-            console.log("err", err);
           });
       },
       form.isFieldsValidating([]) ? 1000 : 0
     );
+  };
+
+  const add = () => {
+    setVisible(true);
   };
 
   useEffect(() => {
@@ -225,10 +221,10 @@ const UserManage = () => {
 
   return (
     <div>
-      <ContentTitle title="用户管理">
-        <RBACComponent permission="user-manage:add">
-          <Button type="primary" onClick={() => edit()}>
-            新增用户
+      <ContentTitle title="角色管理">
+        <RBACComponent permission="role-manage:add">
+          <Button type="primary" onClick={() => add()}>
+            新增
           </Button>
         </RBACComponent>
       </ContentTitle>
@@ -236,8 +232,8 @@ const UserManage = () => {
         <Form onFinish={search} form={form}>
           <Row gutter={16}>
             <Col className="gutter-row" span={8}>
-              <Item label="姓名" name="name" className="search-box">
-                <Input allowClear placeholder="请输入" maxLength={30}></Input>
+              <Item label="角色名称" name="name" className="search-box">
+                <Input placeholder="请输入" maxLength={50}></Input>
               </Item>
             </Col>
             <Col className="gutter-row opera-box" span={8}>
@@ -265,7 +261,7 @@ const UserManage = () => {
 
       <Modal
         confirmLoading={confirmLoading}
-        title={`${curId ? "编辑" : "新增"}用户`}
+        title={`${curId ? "编辑" : "新增"}角色`}
         visible={visible}
         maskClosable={false}
         onCancel={cancelHandle}
@@ -291,4 +287,4 @@ const UserManage = () => {
   );
 };
 
-export default UserManage;
+export default RoleManage;

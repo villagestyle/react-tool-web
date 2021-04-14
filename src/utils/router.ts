@@ -16,8 +16,16 @@ export const Routers = [
     name: "用户管理"
   },
   {
-    path: '/m/note-manage',
-    name: '备忘管理'
+    path: "/m/note-manage",
+    name: "备忘管理"
+  },
+  {
+    path: "/m/resources-manage",
+    name: "资源管理"
+  },
+  {
+    path: "/m/role-manage",
+    name: "角色管理"
   },
   {
     path: "/error",

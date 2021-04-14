@@ -5,6 +5,7 @@ import { Weaper } from "./index.style";
 import { useForm } from "antd/lib/form/Form";
 import userAPI from "src/api/user";
 import { CellPhoneValidator } from "src/utils";
+import RoleSelector from "src/components/role-selector";
 
 interface Prop {
   id: string | number;
@@ -17,33 +18,24 @@ const PWDValidator = (
   callback: (error?: string) => void
 ) => {
   if (!value) return Promise.resolve();
-  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{6,12}$/.test(value)) {
-    return Promise.reject(`密码格式由大小写字母及数字组成,长度为6-12位`);
+  if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[^]{6,20}$/.test(value)) {
+    return Promise.reject(`密码格式由大小写字母及数字组成,长度为6-20位`);
   }
   return Promise.resolve();
 };
 
 const AddComponent = forwardRef((prop: Prop, ref: Ref<FormInstance>) => {
-  // const [roleNameList, setRoleNameList] = useState([]);
-
   const [form] = useForm();
 
   useEffect(() => {
     if (prop.id) {
       userAPI.info(prop.id).then(ret => {
         form.setFieldsValue({
-          ...ret.data,
-          // roleId: ret.data?.role.id
+          ...ret.data
         });
       });
     }
   }, [prop.id, form]);
-
-  // const loadConfig = () => {
-  //   userAPI.roleList().then(ret => {
-  //     setRoleNameList(ret.data);
-  //   })
-  // };
 
   return (
     <Weaper>
@@ -78,10 +70,7 @@ const AddComponent = forwardRef((prop: Prop, ref: Ref<FormInstance>) => {
                 }
               ]}
             >
-              <Input
-                placeholder="请输入"
-                maxLength={20}
-              ></Input>
+              <Input placeholder="请输入" maxLength={20}></Input>
             </Form.Item>
           </Col>
           <Col span={24}>
@@ -118,7 +107,7 @@ const AddComponent = forwardRef((prop: Prop, ref: Ref<FormInstance>) => {
               <Input placeholder="请输入" maxLength={11} type="tel"></Input>
             </Form.Item>
           </Col>
-          {/* {!prop.isCenter && (
+          {!prop.isCenter && (
             <Col span={24}>
               <Form.Item
                 label="角色"
@@ -130,14 +119,10 @@ const AddComponent = forwardRef((prop: Prop, ref: Ref<FormInstance>) => {
                   }
                 ]}
               >
-                <Select placeholder="请选择">
-                  {
-                    roleNameList.map(d => <Select.Option key={d.id} value={d.id}>{d.name}</Select.Option>)
-                  }
-                </Select>
+                <RoleSelector></RoleSelector>
               </Form.Item>
             </Col>
-          )} */}
+          )}
           {!prop.id && (
             <Col span={24}>
               <Form.Item
@@ -151,7 +136,7 @@ const AddComponent = forwardRef((prop: Prop, ref: Ref<FormInstance>) => {
               >
                 <Input
                   type="password"
-                  maxLength={12}
+                  maxLength={20}
                   placeholder="不输则为默认密码"
                 ></Input>
               </Form.Item>
@@ -163,4 +148,4 @@ const AddComponent = forwardRef((prop: Prop, ref: Ref<FormInstance>) => {
   );
 });
 
-export default AddComponent;
+export default React.memo(AddComponent);

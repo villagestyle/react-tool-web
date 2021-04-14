@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, lazy, Suspense, useEffect } from "react";
 import { Layout, Menu, Dropdown, Modal, message } from "antd";
 import { Weaper, TabsWeaper } from "./index.style";
 import {
@@ -6,70 +6,52 @@ import {
   MenuFoldOutlined,
   UserOutlined,
   HomeOutlined,
-  LoginOutlined
+  LoginOutlined,
+  MailOutlined
 } from "@ant-design/icons";
 import { Route, Link, Redirect, Switch } from "react-router-dom";
 import Tabs from "./_components/tabs";
 import Error from "src/pages/error/404";
-import { KeepAlive, useAliveController } from "react-activation";
-import { useSelector, useDispatch } from "react-redux";
-import { ApplicationState } from "src/store/index";
-import { Resource } from "src/types";
+import { useDispatch } from "react-redux";
 import Avatar from "antd/lib/avatar/avatar";
 import { push } from "connected-react-router";
 import userAPI from "src/api/user";
-import { Config } from "src/utils";
+import { Config, formatResource } from "src/utils";
+import AliveRoute from "src/components/alive-route";
+import { Resource } from "src/types";
+import * as permissionActions from "src/store/permission/actions";
+import SubMenu from "_antd@4.9.4@antd/lib/menu/SubMenu";
 
 const HomeComponent = lazy(() => import("../home"));
 const UserManageComponent = lazy(() => import("../user/manage"));
 const NoteManageComponent = lazy(() => import("../note/manage"));
-
-interface MenuResources extends Resource {
-  children: Resource[];
-}
+const ResourceManageComponent = lazy(() => import("../resource"));
+const RoleManageComponent = lazy(() => import("../role/manage"));
 
 const { Header, Sider, Content } = Layout;
 
 const LayoutComponent = () => {
-  console.log("渲染LayoutComponent");
   const dispatch = useDispatch();
   const [collapsed, setCollapsed] = useState<boolean>(false);
-  // const { logo } = useSelector((store: ApplicationState) => store.school);
-  // const { username } = useSelector(
-  //   (store: ApplicationState) => store.user.user
-  // );
+  const [menuResours, setMenuResours] = useState<any[]>([]);
 
-  // useEffect(() => {
-  //   userAPI.resource().then(ret => {
-  //     const { resources } = ret.data as {
-  //       resources: Resource[];
-  //     };
-  //     dispatch(permissionActions.toggle({ resources }));
-  //     const menuResource = resources.filter(d => d.type === 0);
-  //     setMenuResours(
-  //       formatResource(
-  //         menuResource,
-  //         menuResource.filter((d: any) => !!!d.pid).map((d: any) => d.id)
-  //       )
-  //     );
-  //   });
-  // }, []);
+  useEffect(() => {
+    userAPI.resource().then(ret => {
+      const resources = ret.data as Resource[];
+      dispatch(permissionActions.toggle({ resources }));
+      const menuResource = resources.filter(d => d.type === 0);
+      setMenuResours(
+        formatResource(
+          menuResource,
+          menuResource.filter((d: any) => !!!d.pid).map((d: any) => d.id)
+        )
+      );
+    });
+  }, [dispatch]);
 
   const toggle = () => {
     setCollapsed(!collapsed);
   };
-
-  // const formatResource = (arr: any[], ids?: string[]): any[] => {
-  //   const list = arr.filter(d => ids.includes(d.id));
-  //   return list.map(item => {
-  //     const child = arr.filter(d => item.id === d.pid);
-  //     const childIds = child.map(d => d.id);
-  //     return {
-  //       ...item,
-  //       children: formatResource(arr, childIds)
-  //     };
-  //   });
-  // };
 
   const logOut = () => {
     Modal.confirm({
@@ -85,6 +67,41 @@ const LayoutComponent = () => {
     });
   };
 
+  const iconShow = (type: string) => {
+    switch (type) {
+      case "HomeOutlined":
+        return <HomeOutlined></HomeOutlined>;
+    }
+  };
+
+  const menu = menuResours.map(resource => {
+    if (resource.children.length) {
+      return (
+        <SubMenu
+          key={resource.permission}
+          icon={resource.icon ? iconShow(resource.icon) : <MailOutlined />}
+          title={resource.name}
+        >
+          {resource.children.map((d: any) => (
+            <Menu.Item key={d.permission}>
+              <Link to={`/${Config.PACKAGE_NAME}${d.routerLink}`}>
+                {d.name}
+              </Link>
+            </Menu.Item>
+          ))}
+        </SubMenu>
+      );
+    } else {
+      return (
+        <Menu.Item key={resource.permission} icon={<UserOutlined />}>
+          <Link to={`/${Config.PACKAGE_NAME}${resource.routerLink}`}>
+            {resource.name}
+          </Link>
+        </Menu.Item>
+      );
+    }
+  });
+
   return (
     <Weaper>
       <Layout>
@@ -95,19 +112,12 @@ const LayoutComponent = () => {
           width={250}
           className="sider"
         >
-          <div className={`logo ${collapsed ? "logo-s" : ""}`}>
-            {/* <img src={logo} alt="" /> */}
-          </div>
+          <div className="logo"></div>
           <Menu theme="dark" mode="inline" defaultSelectedKeys={["0"]}>
-            <Menu.Item key="0" icon={<HomeOutlined />}>
+            <Menu.Item key={0} icon={<HomeOutlined />}>
               <Link to={`/${Config.PACKAGE_NAME}/m/home`}>首页</Link>
             </Menu.Item>
-            <Menu.Item key="1" icon={<HomeOutlined />}>
-              <Link to={`/${Config.PACKAGE_NAME}/m/user-manage`}>用户管理</Link>
-            </Menu.Item>
-            <Menu.Item key="2" icon={<HomeOutlined />}>
-              <Link to={`/${Config.PACKAGE_NAME}/m/note-manage`}>备忘管理</Link>
-            </Menu.Item>
+            {menu}
           </Menu>
         </Sider>
         <Layout className="site-layout">
@@ -131,7 +141,6 @@ const LayoutComponent = () => {
             >
               <div className="user">
                 <Avatar size={28} icon={<UserOutlined />}></Avatar>
-                {/* <Link to="/">{username}</Link> */}
               </div>
             </Dropdown>
           </Header>
@@ -152,7 +161,18 @@ const LayoutComponent = () => {
                 path={`/${Config.PACKAGE_NAME}/m/note-manage`}
                 com={SuspenseComponent(NoteManageComponent)}
               ></AliveRoute>
-              <Route path={`/${Config.PACKAGE_NAME}/m/error`} component={Error}></Route>
+              <AliveRoute
+                path={`/${Config.PACKAGE_NAME}/m/resources-manage`}
+                com={SuspenseComponent(ResourceManageComponent)}
+              ></AliveRoute>
+              <AliveRoute
+                path={`/${Config.PACKAGE_NAME}/m/role-manage`}
+                com={SuspenseComponent(RoleManageComponent)}
+              ></AliveRoute>
+              <Route
+                path={`/${Config.PACKAGE_NAME}/m/error`}
+                component={Error}
+              ></Route>
               <Redirect to={`/${Config.PACKAGE_NAME}/m/error`}></Redirect>
             </Switch>
           </Content>
@@ -169,49 +189,6 @@ const SuspenseComponent = (
     <Suspense fallback={null}>
       <Component></Component>
     </Suspense>
-  );
-};
-
-interface Prop {
-  path: string;
-  com: JSX.Element;
-}
-
-const AliveRoute = (prop: Prop) => {
-  const panes = useSelector((store: ApplicationState) => store.tabs);
-  // const router = useSelector((store: ApplicationState) => store.router);
-
-  const { path } = prop;
-  const [alive, setAlive] = useState<boolean>(true);
-  const { getCachingNodes, dropScope } = useAliveController();
-
-  useEffect(() => {
-    setAlive(!!panes.filter(d => `/${Config.PACKAGE_NAME}` + d.path === path)[0]);
-    const keys = panes.map(d => `/${Config.PACKAGE_NAME}` + d.path);
-    const alives = getCachingNodes();
-    const delPro: Promise<any>[] = [];
-    alives.forEach(d => {
-      if (!keys.includes(d.name)) {
-        delPro.push(dropScope(d.name));
-      }
-    });
-  }, [dropScope, getCachingNodes, path, panes]);
-
-  return (
-    <Route
-      path={prop.path}
-      render={router => {
-        return (
-          <KeepAlive
-            when={alive}
-            id={router.location.pathname}
-            name={router.location.pathname}
-          >
-            {prop.com}
-          </KeepAlive>
-        );
-      }}
-    ></Route>
   );
 };
 

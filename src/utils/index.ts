@@ -189,3 +189,15 @@ export const et = (url: string) => {
   );
   return token;
 };
+
+export const formatResource = (arr: any[], ids?: string[]): any[] => {
+  const list = arr.filter(d => ids.includes(d.id));
+  return list.map(item => {
+    const child = arr.filter(d => item.id === d.pid);
+    const childIds = child.map(d => d.id);
+    return {
+      ...item,
+      children: formatResource(arr, childIds)
+    };
+  });
+};

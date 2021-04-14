@@ -44,7 +44,9 @@ export default {
   resetPWD: (id: string) => axios.put(`user/reset_password/${id}`),
   /** 修改密码 */
   changePWD: (data: { oldPassword: string; newPassword: string }) =>
-    postForm(`user/change_password`, data, "put")
+    postForm(`user/change_password`, data, "put"),
+  /** 获取当前登录用户的权限列表 */
+  resource: () => axios.get('user/resource')
 };
 
 export interface PageScreen extends Screen {

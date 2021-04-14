@@ -7,8 +7,8 @@ import { push } from "connected-react-router";
 import { Config } from "src/utils";
 
 const instance = axios.create({
-  baseURL: "https://www.villagestyle.top:9000/interface"
-  // baseURL: "http://localhost:9001/tool"
+  // baseURL: "http://www.villagestyle.top:9001/interface"
+  baseURL: "http://localhost:9001/interface"
 });
 
 instance.interceptors.request.use(

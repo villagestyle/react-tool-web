@@ -8,7 +8,7 @@ interface Prop {
   children: ReactNode;
 }
 
-const RBAComponent = (prop: Prop) => {
+const RBACComponent = (prop: Prop) => {
   const [show, setShow] = useState<boolean>(true);
   const { resources } = useSelector(
     (store: ApplicationState) => store.permission
@@ -16,9 +16,9 @@ const RBAComponent = (prop: Prop) => {
 
   useEffect(() => {
     setShow(!!resources.find(d => d.permission === prop.permission));
-  }, [resources]);
+  }, [resources, prop]);
 
   return show && <Weaper>{prop.children}</Weaper>;
 };
 
-export default RBAComponent;
+export default RBACComponent;
